@@ -8,7 +8,7 @@
  * - 削除機能
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import dayjs from 'dayjs';
 import { ExpenseList } from '../components/expenses/ExpenseList';
 import { ExpenseForm } from '../components/forms/ExpenseForm';
@@ -27,20 +27,20 @@ const expenseService = new ExpenseService(storageAdapter, new SettingsService(st
  */
 export function ListPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
   const [monthFilter, setMonthFilter] = useState<string>('current'); // 'current', 'last', 'all', 'custom'
   const [categoryFilter, setCategoryFilter] = useState<Category | ''>('');
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>('');
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // 支出一覧を取得
   useEffect(() => {
     loadExpenses();
   }, []);
 
-  // フィルタ適用
-  useEffect(() => {
+  // フィルタ適用（useMemoで最適化）
+  const filteredExpenses = useMemo(() => {
     let filtered = [...expenses];
 
     // 月フィルタ
@@ -70,7 +70,7 @@ export function ListPage() {
       filtered = filtered.filter((e) => e.subcategory === subcategoryFilter);
     }
 
-    setFilteredExpenses(filtered);
+    return filtered;
   }, [expenses, monthFilter, categoryFilter, subcategoryFilter]);
 
   // 支出一覧を読み込む
@@ -85,6 +85,26 @@ export function ListPage() {
   const handleExpenseClick = (expense: Expense) => {
     setEditingExpense(expense);
   };
+
+  // 編集モーダルが開いたときにフォーカスを設定
+  useEffect(() => {
+    if (editingExpense && modalRef.current) {
+      // モーダル内の最初のフォーカス可能な要素にフォーカス
+      const firstInput = modalRef.current.querySelector<HTMLElement>('input, button, select, textarea');
+      firstInput?.focus();
+    }
+  }, [editingExpense]);
+
+  // ESCキーでモーダルを閉じる
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && editingExpense) {
+        setEditingExpense(null);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [editingExpense]);
 
   // 編集を保存
   const handleUpdate = async (input: Parameters<typeof expenseService.update>[0]) => {
@@ -188,15 +208,32 @@ export function ListPage() {
 
       {/* 編集モーダル */}
       {editingExpense && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setEditingExpense(null);
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-expense-title"
+        >
+          <div
+            ref={modalRef}
+            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">支出を編集</h3>
+                <h3 id="edit-expense-title" className="text-lg font-semibold text-gray-900">
+                  支出を編集
+                </h3>
                 <button
                   type="button"
                   onClick={() => setEditingExpense(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  aria-label="閉じる"
                 >
                   ✕
                 </button>

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
+import { InstallPrompt, UpdateNotification } from './components/pwa';
 import { AddPage } from './pages/AddPage';
 import { ListPage } from './pages/ListPage';
 import { SummaryPage } from './pages/SummaryPage';
@@ -18,6 +19,7 @@ function App() {
   return (
     <BrowserRouter>
       <Layout>
+        <InstallPrompt />
         <Routes>
           {/* デフォルトルートは追加画面にリダイレクト */}
           <Route path="/" element={<Navigate to="/add" replace />} />
@@ -26,6 +28,7 @@ function App() {
           <Route path="/summary" element={<SummaryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
+        <UpdateNotification />
       </Layout>
     </BrowserRouter>
   );

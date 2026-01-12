@@ -7,7 +7,7 @@
  * - 気づき機能（タクシー比率、交際費ピーク日、週次比較、内訳偏り）
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
 import { StorageAdapter } from '../services/StorageAdapter';
 import { AggregationService } from '../services/AggregationService';
@@ -31,29 +31,32 @@ export function SummaryPage() {
     startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
     endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
   });
-  const [categorySummary, setCategorySummary] = useState<CategorySummary | null>(null);
-  const [transportBreakdown, setTransportBreakdown] = useState<SubcategorySummary[]>([]);
-  const [socialBreakdown, setSocialBreakdown] = useState<SubcategorySummary[]>([]);
-  const [satisfactionStats, setSatisfactionStats] = useState<SatisfactionStats | null>(null);
-  const [insights, setInsights] = useState<Insights | null>(null);
 
-  // 集計データを取得
-  useEffect(() => {
-    const summary = aggregationService.getCategorySummary(period);
-    setCategorySummary(summary);
+  // 集計データを取得（useMemoで最適化）
+  const categorySummary = useMemo(
+    () => aggregationService.getCategorySummary(period),
+    [period]
+  );
 
-    const transport = aggregationService.getSubcategoryBreakdown(period, 'transport');
-    setTransportBreakdown(transport);
+  const transportBreakdown = useMemo(
+    () => aggregationService.getSubcategoryBreakdown(period, 'transport'),
+    [period]
+  );
 
-    const social = aggregationService.getSubcategoryBreakdown(period, 'social');
-    setSocialBreakdown(social);
+  const socialBreakdown = useMemo(
+    () => aggregationService.getSubcategoryBreakdown(period, 'social'),
+    [period]
+  );
 
-    const satisfaction = aggregationService.getSatisfactionStats(period);
-    setSatisfactionStats(satisfaction);
+  const satisfactionStats = useMemo(
+    () => aggregationService.getSatisfactionStats(period),
+    [period]
+  );
 
-    const insight = aggregationService.getInsights(period);
-    setInsights(insight);
-  }, [period]);
+  const insights = useMemo(
+    () => aggregationService.getInsights(period),
+    [period]
+  );
 
   return (
     <div className="space-y-4">
