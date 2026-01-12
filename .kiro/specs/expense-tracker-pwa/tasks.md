@@ -2,7 +2,7 @@
 
 ## タスク一覧
 
-- [ ] 1. プロジェクト初期設定
+- [x] 1. プロジェクト初期設定
 - [x] 1.1 Vite + React + TypeScript プロジェクトの作成
   - Vite 5.x でReact 18 + TypeScript 5.x プロジェクトを作成
   - ESLint/Prettier の設定
@@ -20,7 +20,7 @@
   - キャッシュ戦略の設定（Cache-First for app shell, Stale-While-Revalidate for assets）
   - _Requirements: 14.1, 14.2, 14.4_
 
-- [ ] 2. 型定義とドメインモデル
+- [x] 2. 型定義とドメインモデル
 - [x] 2.1 共通型とエンティティ型の定義
   - Expense 型の定義（id, date, amount, category, subcategory, memo, satisfaction, created_at, updated_at）
   - Template 型の定義（id, name, category, subcategory, amount, memo_template, sort_order, created_at, updated_at）
@@ -29,7 +29,7 @@
   - Result型とエラー型の定義（ExpenseError, TemplateError, StorageError, ExportError）
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 3. データ永続化層
+- [x] 3. データ永続化層
 - [x] 3.1 StorageAdapter の実装
   - localStorage キー定義（te:expenses, te:templates, te:settings）
   - get/set/remove/clear メソッドの実装
@@ -39,7 +39,7 @@
   - _Requirements: 15.1, 15.4_
   - _Contracts: StorageAdapter Service_
 
-- [ ] 4. 支出管理サービス
+- [x] 4. 支出管理サービス
 - [x] 4.1 ExpenseService CRUD操作の実装
   - create メソッド（バリデーション含む）の実装
   - update メソッドの実装
@@ -62,8 +62,8 @@
   - 保存成功時の Settings 更新
   - _Requirements: 1.2_
 
-- [ ] 5. テンプレートサービス
-- [ ] 5.1 (P) TemplateService の実装
+- [x] 5. テンプレートサービス
+- [x] 5.1 (P) TemplateService の実装
   - create メソッドの実装（表示名、区分、サブ区分は必須）
   - update メソッドの実装
   - delete メソッドの実装
@@ -72,8 +72,8 @@
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
   - _Contracts: TemplateService Service_
 
-- [ ] 6. 集計サービス
-- [ ] 6.1 AggregationService 基本集計の実装
+- [x] 6. 集計サービス
+- [x] 6.1 AggregationService 基本集計の実装
   - getCategorySummary（交通費合計、交際費合計、総合計）の実装
   - getSubcategoryBreakdown（サブ区分別内訳）の実装
   - 期間指定フィルタの実装
@@ -81,7 +81,7 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
   - _Contracts: AggregationService Service_
 
-- [ ] 6.2 満足度統計機能の実装
+- [x] 6.2 満足度統計機能の実装
   - 平均値計算（満足度設定済みのみ対象）
   - 分布計算（1〜5それぞれの件数）
   - 期間内推移（日別または週別）の計算
@@ -89,15 +89,15 @@
   - null値の除外処理
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 6.3 気づき機能の実装
+- [x] 6.3 気づき機能の実装
   - タクシー比率の計算（今月の交通費に占める割合）
   - 交際費合計が多い日TOP3の抽出
   - 週次平均比較（今週 vs 先週）の計算
   - 内訳偏りの計算
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 7. エクスポートサービス
-- [ ] 7.1 (P) CSV出力機能の実装
+- [x] 7. エクスポートサービス
+- [x] 7.1 (P) CSV出力機能の実装
   - 期間指定による支出データ抽出
   - CSV形式（date,amount,category,subcategory,memo,satisfaction）への変換
   - 満足度未設定時の空文字処理
@@ -105,33 +105,33 @@
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
   - _Contracts: ExportService Service_
 
-- [ ] 7.2 (P) JSONバックアップ機能の実装
+- [x] 7.2 (P) JSONバックアップ機能の実装
   - 全データ（expenses, templates, settings, schemaVersion）のJSON生成
   - exportedAt タイムスタンプの付与
   - ファイル名生成（日時を含む）
   - ファイルダウンロード処理
   - _Requirements: 11.1, 11.2, 11.3_
 
-- [ ] 7.3 JSON復元機能の実装
+- [x] 7.3 JSON復元機能の実装
   - ファイル読み込み処理
   - validateBackup（形式検証、スキーマバージョン検証）の実装
   - importJson（全削除→置き換え）の実装
   - エラーハンドリング（形式不正、バージョン不一致）
   - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6_
 
-- [ ] 7.4 (P) 全削除機能の実装
+- [x] 7.4 (P) 全削除機能の実装
   - deleteAll メソッドの実装
   - _Requirements: 13.2_
 
-- [ ] 8. 共通UIコンポーネント
-- [ ] 8.1 レイアウトとナビゲーションの実装
+- [x] 8. 共通UIコンポーネント
+- [x] 8.1 レイアウトとナビゲーションの実装
   - アプリレイアウト（ヘッダー、メインコンテンツ、フッター）の作成
   - フッタタブナビゲーション（追加、一覧、集計、設定）の実装
   - React Router によるページルーティング設定
   - モバイルファーストのレスポンシブデザイン
   - _Requirements: 16.1, 16.2_
 
-- [ ] 8.2 (P) フォーム共通コンポーネントの実装
+- [x] 8.2 (P) フォーム共通コンポーネントの実装
   - DateInput コンポーネント（日付選択）
   - AmountInput コンポーネント（金額入力、数値キーボード対応）
   - CategorySelector コンポーネント（区分選択）
@@ -141,14 +141,14 @@
   - 適切なタップ領域サイズの確保
   - _Requirements: 1.10, 2.4, 16.3_
 
-- [ ] 8.3 (P) ダイアログとフィードバックの実装
+- [x] 8.3 (P) ダイアログとフィードバックの実装
   - ConfirmDialog コンポーネント（確認ダイアログ、danger バリアント対応）
   - Toast 通知コンポーネント（成功/エラー/警告）
   - LoadingIndicator コンポーネント
   - _Requirements: 5.1, 5.4, 12.4, 13.1, 13.3, 15.4_
 
-- [ ] 9. 追加画面
-- [ ] 9.1 ExpenseForm の実装
+- [x] 9. 追加画面
+- [x] 9.1 ExpenseForm の実装
   - 日付入力（デフォルト=今日）
   - 金額入力
   - 区分・サブ区分選択
@@ -158,81 +158,81 @@
   - 保存処理（ExpenseService.create 呼び出し）
   - _Requirements: 1.1, 1.6, 1.7, 1.8, 1.9, 1.10_
 
-- [ ] 9.2 テンプレチップの実装
+- [x] 9.2 テンプレチップの実装
   - テンプレ一覧の取得と表示
   - テンプレタップ時のフォーム反映
   - _Requirements: 1.5_
 
-- [ ] 9.3 頻出金額チップの実装
+- [x] 9.3 頻出金額チップの実装
   - 頻出金額候補の取得と表示
   - 金額チップタップ時の反映
   - _Requirements: 1.3, 1.4_
 
-- [ ] 9.4 AddPage の統合
+- [x] 9.4 AddPage の統合
   - ExpenseForm、テンプレチップ、頻出金額チップの統合
   - 前回入力値の自動反映
   - 保存成功後のフィードバック
   - _Requirements: 1.2_
 
-- [ ] 10. 一覧画面
-- [ ] 10.1 ExpenseList の実装
+- [x] 10. 一覧画面
+- [x] 10.1 ExpenseList の実装
   - 支出一覧の取得と表示（日付降順）
   - 各項目の表示（日付、金額、区分・サブ区分、メモ省略、満足度）
   - _Requirements: 3.1, 3.2_
 
-- [ ] 10.2 フィルタ機能の実装
+- [x] 10.2 フィルタ機能の実装
   - 月フィルタ（今月、先月、月指定）
   - 区分フィルタ
   - サブ区分フィルタ
   - フィルタUI（ドロワーまたはモーダル）
   - _Requirements: 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 10.3 編集モーダルの実装
+- [x] 10.3 編集モーダルの実装
   - 支出タップ時の編集モーダル表示
   - ExpenseForm の再利用（編集モード）
   - 更新処理（ExpenseService.update 呼び出し）
   - 更新後の一覧反映
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 10.4 削除機能の実装
+- [x] 10.4 削除機能の実装
   - 削除ボタンと確認ダイアログ
   - 削除処理（ExpenseService.delete 呼び出し）
   - 削除後の一覧反映
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 10.5 ListPage の統合
+- [x] 10.5 ListPage の統合
   - ExpenseList、フィルタ、編集モーダル、削除機能の統合
   - パフォーマンス最適化（React.memo, useMemo）
   - _Requirements: 16.4_
 
-- [ ] 11. 集計画面
-- [ ] 11.1 基本集計パネルの実装
+- [x] 11. 集計画面
+- [x] 11.1 基本集計パネルの実装
   - 今月の交通費・交際費・総合計の表示
   - サブ区分別内訳の表示
   - 期間指定UIの実装
   - _Requirements: 6.1, 6.2, 6.3_
 
-- [ ] 11.2 満足度統計パネルの実装
+- [x] 11.2 満足度統計パネルの実装
   - 平均満足度の表示
   - 分布（1-5の件数）の表示
   - 期間内推移グラフの表示
   - サブ区分別平均満足度の表示
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 11.3 気づきパネルの実装
+- [x] 11.3 気づきパネルの実装
   - タクシー比率の表示
   - 交際費ピーク日TOP3の表示
   - 週次平均比較の表示
   - 内訳偏りの表示
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 11.4 SummaryPage の統合
+- [x] 11.4 SummaryPage の統合
   - タブまたはアコーディオンによる集計/満足度/気づきの切り替え
   - 期間選択の共有
   - _Requirements: 16.4_
 
-- [ ] 12. 設定画面
-- [ ] 12.1 テンプレート管理UIの実装
+- [x] 12. 設定画面
+- [x] 12.1 テンプレート管理UIの実装
   - テンプレ一覧表示
   - テンプレ追加フォーム
   - テンプレ編集モーダル
@@ -240,25 +240,25 @@
   - 並び替え機能
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-- [ ] 12.2 (P) エクスポートパネルの実装
+- [x] 12.2 (P) エクスポートパネルの実装
   - CSV出力UI（期間指定、ダウンロードボタン）
   - JSONバックアップUI（ダウンロードボタン）
   - _Requirements: 10.1, 10.4, 11.2_
 
-- [ ] 12.3 復元パネルの実装
+- [x] 12.3 復元パネルの実装
   - JSON復元UI（ファイル選択）
   - 検証結果の表示
   - 確認ダイアログ（全削除警告）
   - 復元結果フィードバック
   - _Requirements: 12.1, 12.4, 12.6_
 
-- [ ] 12.4 危険な操作セクションの実装
+- [x] 12.4 危険な操作セクションの実装
   - 全削除ボタン（危険な操作として強調）
   - 確認ダイアログ（警告メッセージ付き）
   - データ消失リスクの説明表示
   - _Requirements: 13.1, 13.2, 13.3, 15.3_
 
-- [ ] 12.5 SettingsPage の統合
+- [x] 12.5 SettingsPage の統合
   - テンプレ管理、エクスポート、復元、危険な操作の統合
   - セクション分離とUI整理
   - _Requirements: 15.2_
