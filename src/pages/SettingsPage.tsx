@@ -1,60 +1,458 @@
 /**
  * 設定画面
  *
- * アプリの設定とデータ管理を行う画面です。
- * - テンプレート管理
- * - CSV出力
- * - JSONバックアップ
- * - JSON復元
- * - 全データ削除
+ * テンプレート管理、データエクスポート、バックアップ・復元、全削除を行う画面です。
+ */
+
+import { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
+import { StorageAdapter } from '../services/StorageAdapter';
+import { TemplateService } from '../services/TemplateService';
+import { ExportService } from '../services/ExportService';
+import type { Template, TemplateCreateInput, BackupData } from '../types';
+import { SUBCATEGORIES_BY_CATEGORY } from '../types/constants';
+
+// サービスインスタンス
+const storageAdapter = new StorageAdapter();
+const templateService = new TemplateService(storageAdapter);
+const exportService = new ExportService(storageAdapter);
+
+/**
+ * 設定画面コンポーネント
  */
 export function SettingsPage() {
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [deletingTemplate, setDeletingTemplate] = useState<Template | null>(null);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // テンプレート一覧を取得
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  // テンプレート一覧を読み込む
+  const loadTemplates = () => {
+    const templateList = templateService.list();
+    setTemplates(templateList);
+  };
+
+  // CSV出力
+  const handleExportCsv = () => {
+    const now = dayjs();
+    const period = {
+      startDate: now.startOf('month').format('YYYY-MM-DD'),
+      endDate: now.endOf('month').format('YYYY-MM-DD'),
+    };
+    const csv = exportService.exportCsv(period);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `expenses_${now.format('YYYY-MM-DD')}.csv`;
+    link.click();
+    setSuccess('CSVファイルをダウンロードしました');
+  };
+
+  // JSONバックアップ
+  const handleExportJson = () => {
+    const backup = exportService.exportJson();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: 'application/json',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `backup_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.json`;
+    link.click();
+    setSuccess('バックアップファイルをダウンロードしました');
+  };
+
+  // JSON復元（ファイル選択）
+  const handleRestoreFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setRestoreFile(file);
+      setShowRestoreDialog(true);
+    }
+  };
+
+  // JSON復元実行
+  const handleRestoreConfirm = async () => {
+    if (!restoreFile) return;
+
+    try {
+      const text = await restoreFile.text();
+      const data = JSON.parse(text);
+      const validationResult = exportService.validateBackup(data);
+
+      if (!validationResult.ok) {
+        setError(`復元に失敗しました: ${validationResult.error.type === 'INVALID_FORMAT' ? validationResult.error.message : validationResult.error.type === 'SCHEMA_MISMATCH' ? `スキーマバージョンが一致しません（期待: ${validationResult.error.expected}, 実際: ${validationResult.error.actual}）` : '予期しないエラー'}`);
+        setShowRestoreDialog(false);
+        setRestoreFile(null);
+        return;
+      }
+
+      const importResult = exportService.importJson(validationResult.value);
+      if (importResult.ok) {
+        setSuccess('データを復元しました');
+        setShowRestoreDialog(false);
+        setRestoreFile(null);
+        // ページをリロードしてデータを反映
+        window.location.reload();
+      } else {
+        setError(`復元に失敗しました: ${importResult.error.message}`);
+        setShowRestoreDialog(false);
+        setRestoreFile(null);
+      }
+    } catch (err) {
+      setError(`ファイルの読み込みに失敗しました: ${err instanceof Error ? err.message : '予期しないエラー'}`);
+      setShowRestoreDialog(false);
+      setRestoreFile(null);
+    }
+  };
+
+  // 全削除実行
+  const handleDeleteAllConfirm = () => {
+    const result = exportService.deleteAll();
+    if (result.ok) {
+      setSuccess('すべてのデータを削除しました');
+      setShowDeleteAllDialog(false);
+      // ページをリロード
+      window.location.reload();
+    } else {
+      setError(`削除に失敗しました: ${result.error.message}`);
+      setShowDeleteAllDialog(false);
+    }
+  };
+
+  // テンプレート作成・更新
+  const handleTemplateSubmit = (input: TemplateCreateInput) => {
+    if (editingTemplate) {
+      const result = templateService.update(editingTemplate.id, input);
+      if (result.ok) {
+        setSuccess('テンプレートを更新しました');
+        setEditingTemplate(null);
+        setShowTemplateForm(false);
+        loadTemplates();
+      } else {
+        setError(`更新に失敗しました: ${result.error.type === 'VALIDATION_ERROR' ? result.error.message : '予期しないエラー'}`);
+      }
+    } else {
+      const result = templateService.create(input);
+      if (result.ok) {
+        setSuccess('テンプレートを作成しました');
+        setShowTemplateForm(false);
+        loadTemplates();
+      } else {
+        setError(`作成に失敗しました: ${result.error.type === 'VALIDATION_ERROR' ? result.error.message : '予期しないエラー'}`);
+      }
+    }
+  };
+
+  // テンプレート削除確認
+  const handleTemplateDeleteConfirm = () => {
+    if (!deletingTemplate) return;
+
+    const result = templateService.delete(deletingTemplate.id);
+    if (result.ok) {
+      setSuccess('テンプレートを削除しました');
+      setDeletingTemplate(null);
+      loadTemplates();
+    } else {
+      setError(`削除に失敗しました: ${result.error.message}`);
+      setDeletingTemplate(null);
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="card">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">設定</h2>
-        <p className="text-gray-500 text-sm">
-          このページは実装予定です。アプリの設定とデータ管理ができます。
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-2">設定</h2>
+        <p className="text-sm text-gray-500">
+          テンプレート管理、データエクスポート、バックアップ・復元を行えます。
         </p>
       </div>
 
-      {/* テンプレート管理セクション */}
-      <section className="card">
-        <h3 className="font-bold text-gray-900 mb-3">テンプレート</h3>
-        <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg">
-          <div className="text-center py-4">
-            <p className="text-gray-400 text-sm">TemplateManager コンポーネント</p>
+      {/* メッセージ表示 */}
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+      {success && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-600">{success}</p>
+        </div>
+      )}
+
+      {/* テンプレート管理 */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-md font-semibold text-gray-900">テンプレート</h3>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingTemplate(null);
+              setShowTemplateForm(true);
+            }}
+            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            追加
+          </button>
+        </div>
+
+        {templates.length === 0 ? (
+          <p className="text-sm text-gray-500">テンプレートがありません</p>
+        ) : (
+          <div className="space-y-2">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className="flex items-center justify-between p-2 border border-gray-200 rounded-lg"
+              >
+                <div>
+                  <span className="text-sm font-medium text-gray-900">{template.name}</span>
+                  <span className="ml-2 text-xs text-gray-500">
+                    {template.category === 'transport' ? '交通費' : '交際費'} / {template.subcategory}
+                    {template.amount && ` / ¥${template.amount.toLocaleString()}`}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingTemplate(template);
+                      setShowTemplateForm(true);
+                    }}
+                    className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded"
+                  >
+                    編集
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingTemplate(template)}
+                    className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
+                  >
+                    削除
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* データエクスポートセクション */}
-      <section className="card">
-        <h3 className="font-bold text-gray-900 mb-3">データ出力</h3>
-        <div className="space-y-2">
-          <button className="w-full btn-primary">CSV出力</button>
-          <button className="w-full btn-primary">JSONバックアップ</button>
-        </div>
-      </section>
+        {/* テンプレート作成・編集フォーム */}
+        {showTemplateForm && (
+          <TemplateForm
+            template={editingTemplate}
+            onSubmit={handleTemplateSubmit}
+            onCancel={() => {
+              setShowTemplateForm(false);
+              setEditingTemplate(null);
+            }}
+          />
+        )}
+      </div>
 
-      {/* データ復元セクション */}
-      <section className="card">
-        <h3 className="font-bold text-gray-900 mb-3">データ復元</h3>
-        <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg">
-          <div className="text-center py-4">
-            <p className="text-gray-400 text-sm">RestorePanel コンポーネント</p>
-          </div>
+      {/* エクスポート */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h3 className="text-md font-semibold text-gray-900 mb-4">エクスポート</h3>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            CSV出力（今月）
+          </button>
+          <button
+            type="button"
+            onClick={handleExportJson}
+            className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            JSONバックアップ
+          </button>
         </div>
-      </section>
+      </div>
 
-      {/* 危険な操作セクション */}
-      <section className="card border border-red-200 bg-red-50">
-        <h3 className="font-bold text-red-700 mb-3">⚠️ 危険な操作</h3>
-        <p className="text-sm text-red-600 mb-3">
-          以下の操作は取り消しができません。実行前に必ずバックアップを取ってください。
+      {/* 復元 */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h3 className="text-md font-semibold text-gray-900 mb-4">復元</h3>
+        <input
+          type="file"
+          accept=".json"
+          onChange={handleRestoreFileSelect}
+          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+        />
+        <p className="mt-2 text-xs text-gray-500">
+          JSONバックアップファイルを選択してください。現在のデータはすべて削除されます。
         </p>
-        <button className="w-full btn-danger">全データを削除</button>
-      </section>
+      </div>
+
+      {/* 危険な操作 */}
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <h3 className="text-md font-semibold text-red-900 mb-4">危険な操作</h3>
+        <p className="text-sm text-red-700 mb-4">
+          すべてのデータを削除します。この操作は取り消せません。
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowDeleteAllDialog(true)}
+          className="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+        >
+          すべてのデータを削除
+        </button>
+      </div>
+
+      {/* 復元確認ダイアログ */}
+      <ConfirmDialog
+        isOpen={showRestoreDialog}
+        title="データを復元"
+        message="現在のデータがすべて削除され、バックアップファイルの内容で置き換えられます。よろしいですか？"
+        confirmLabel="復元"
+        cancelLabel="キャンセル"
+        onConfirm={handleRestoreConfirm}
+        onCancel={() => {
+          setShowRestoreDialog(false);
+          setRestoreFile(null);
+        }}
+        variant="danger"
+      />
+
+      {/* 全削除確認ダイアログ */}
+      <ConfirmDialog
+        isOpen={showDeleteAllDialog}
+        title="すべてのデータを削除"
+        message="すべてのデータが削除されます。この操作は取り消せません。よろしいですか？"
+        confirmLabel="削除"
+        cancelLabel="キャンセル"
+        onConfirm={handleDeleteAllConfirm}
+        onCancel={() => setShowDeleteAllDialog(false)}
+        variant="danger"
+      />
+
+      {/* テンプレート削除確認ダイアログ */}
+      <ConfirmDialog
+        isOpen={!!deletingTemplate}
+        title="テンプレートを削除"
+        message={`テンプレート「${deletingTemplate?.name}」を削除してもよろしいですか？`}
+        confirmLabel="削除"
+        cancelLabel="キャンセル"
+        onConfirm={handleTemplateDeleteConfirm}
+        onCancel={() => setDeletingTemplate(null)}
+        variant="danger"
+      />
     </div>
+  );
+}
+
+/**
+ * テンプレートフォームコンポーネント
+ */
+function TemplateForm({
+  template,
+  onSubmit,
+  onCancel,
+}: {
+  template: Template | null;
+  onSubmit: (input: TemplateCreateInput) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(template?.name || '');
+  const [category, setCategory] = useState<'transport' | 'social' | ''>(
+    template?.category || ''
+  );
+  const [subcategory, setSubcategory] = useState(template?.subcategory || '');
+  const [amount, setAmount] = useState<number | ''>(template?.amount || '');
+  const [memoTemplate, setMemoTemplate] = useState(template?.memo_template || '');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !category || !subcategory) {
+      return;
+    }
+    onSubmit({
+      name,
+      category,
+      subcategory,
+      amount: amount === '' ? null : (amount as number),
+      memo_template: memoTemplate || null,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-4 space-y-3 p-4 border border-gray-200 rounded-lg">
+      <input
+        type="text"
+        placeholder="テンプレート名"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        required
+      />
+      <select
+        value={category}
+        onChange={(e) => {
+          setCategory(e.target.value as 'transport' | 'social' | '');
+          setSubcategory('');
+        }}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        required
+      >
+        <option value="">区分を選択</option>
+        <option value="transport">交通費</option>
+        <option value="social">交際費</option>
+      </select>
+      <select
+        value={subcategory}
+        onChange={(e) => setSubcategory(e.target.value)}
+        disabled={!category}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        required
+      >
+        <option value="">サブ区分を選択</option>
+        {category &&
+          Object.entries(SUBCATEGORIES_BY_CATEGORY[category]).map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+      </select>
+      <input
+        type="number"
+        placeholder="金額（任意）"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+        min="1"
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+      />
+      <textarea
+        placeholder="メモ雛形（任意）"
+        value={memoTemplate}
+        onChange={(e) => setMemoTemplate(e.target.value)}
+        rows={2}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+      />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg"
+        >
+          キャンセル
+        </button>
+        <button
+          type="submit"
+          className="flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg"
+        >
+          {template ? '更新' : '作成'}
+        </button>
+      </div>
+    </form>
   );
 }
