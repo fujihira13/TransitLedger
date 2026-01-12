@@ -12,7 +12,7 @@
   - ディレクトリ構造（pages, components, services, hooks, types）の作成
   - _Requirements: 14.1, 16.1_
 
-- [ ] 1.2 (P) PWA基盤の設定
+- [x] 1.2 (P) PWA基盤の設定
   - vite-plugin-pwa のインストールと設定
   - Web App Manifest（manifest.json）の作成
   - アプリアイコンの配置
