@@ -31,6 +31,16 @@ export function SettingsPage() {
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [csvPeriod, setCsvPeriod] = useState<{
+    startDate: string;
+    endDate: string;
+  }>(() => {
+    const now = dayjs();
+    return {
+      startDate: now.startOf('month').format('YYYY-MM-DD'),
+      endDate: now.endOf('month').format('YYYY-MM-DD'),
+    };
+  });
 
   // テンプレート一覧を取得
   useEffect(() => {
@@ -45,16 +55,11 @@ export function SettingsPage() {
 
   // CSV出力
   const handleExportCsv = () => {
-    const now = dayjs();
-    const period = {
-      startDate: now.startOf('month').format('YYYY-MM-DD'),
-      endDate: now.endOf('month').format('YYYY-MM-DD'),
-    };
-    const csv = exportService.exportCsv(period);
+    const csv = exportService.exportCsv(csvPeriod);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `expenses_${now.format('YYYY-MM-DD')}.csv`;
+    link.download = `expenses_${csvPeriod.startDate}_${csvPeriod.endDate}.csv`;
     link.click();
     setSuccess('CSVファイルをダウンロードしました');
   };
@@ -169,6 +174,46 @@ export function SettingsPage() {
     }
   };
 
+  // テンプレートを上に移動
+  const handleTemplateMoveUp = (template: Template) => {
+    const currentIndex = templates.findIndex((t) => t.id === template.id);
+    if (currentIndex <= 0) return;
+
+    const newTemplates = [...templates];
+    [newTemplates[currentIndex - 1], newTemplates[currentIndex]] = [
+      newTemplates[currentIndex],
+      newTemplates[currentIndex - 1],
+    ];
+
+    const orderedIds = newTemplates.map((t) => t.id);
+    const result = templateService.reorder(orderedIds);
+    if (result.ok) {
+      loadTemplates();
+    } else {
+      setError(`並び替えに失敗しました: ${result.error.message}`);
+    }
+  };
+
+  // テンプレートを下に移動
+  const handleTemplateMoveDown = (template: Template) => {
+    const currentIndex = templates.findIndex((t) => t.id === template.id);
+    if (currentIndex < 0 || currentIndex >= templates.length - 1) return;
+
+    const newTemplates = [...templates];
+    [newTemplates[currentIndex], newTemplates[currentIndex + 1]] = [
+      newTemplates[currentIndex + 1],
+      newTemplates[currentIndex],
+    ];
+
+    const orderedIds = newTemplates.map((t) => t.id);
+    const result = templateService.reorder(orderedIds);
+    if (result.ok) {
+      loadTemplates();
+    } else {
+      setError(`並び替えに失敗しました: ${result.error.message}`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -210,17 +255,48 @@ export function SettingsPage() {
           <p className="text-sm text-gray-500">テンプレートがありません</p>
         ) : (
           <div className="space-y-2">
-            {templates.map((template) => (
+            {templates.map((template, index) => (
               <div
                 key={template.id}
                 className="flex items-center justify-between p-2 border border-gray-200 rounded-lg"
               >
-                <div>
-                  <span className="text-sm font-medium text-gray-900">{template.name}</span>
-                  <span className="ml-2 text-xs text-gray-500">
-                    {template.category === 'transport' ? '交通費' : '交際費'} / {template.subcategory}
-                    {template.amount && ` / ¥${template.amount.toLocaleString()}`}
-                  </span>
+                <div className="flex items-center gap-2 flex-1">
+                  {/* 並び替えボタン */}
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleTemplateMoveUp(template)}
+                      disabled={index === 0}
+                      className={`px-1.5 py-0.5 text-xs rounded ${
+                        index === 0
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                      aria-label="上に移動"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTemplateMoveDown(template)}
+                      disabled={index === templates.length - 1}
+                      className={`px-1.5 py-0.5 text-xs rounded ${
+                        index === templates.length - 1
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                      aria-label="下に移動"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-gray-900">{template.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">
+                      {template.category === 'transport' ? '交通費' : '交際費'} / {template.subcategory}
+                      {template.amount && ` / ¥${template.amount.toLocaleString()}`}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -229,14 +305,14 @@ export function SettingsPage() {
                       setEditingTemplate(template);
                       setShowTemplateForm(true);
                     }}
-                    className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded"
+                    className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     編集
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeletingTemplate(template)}
-                    className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
+                    className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     削除
                   </button>
@@ -259,16 +335,89 @@ export function SettingsPage() {
         )}
       </div>
 
+      {/* データ管理について */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h3 className="text-md font-semibold text-yellow-900 mb-2">データ保存について</h3>
+        <div className="text-sm text-yellow-800 space-y-2">
+          <p>
+            このアプリは、データを端末内のブラウザストレージ（localStorage）に保存しています。
+          </p>
+          <p className="font-medium">
+            以下の場合、データが消失する可能性があります：
+          </p>
+          <ul className="list-disc list-inside ml-2 space-y-1">
+            <li>ブラウザのデータを削除した場合</li>
+            <li>プライベートモード（シークレットモード）で使用した場合</li>
+            <li>OSの設定変更やアプリの再インストール</li>
+            <li>ストレージ容量が上限に達した場合</li>
+          </ul>
+          <p className="font-medium mt-3">
+            定期的にJSONバックアップを取得することをお勧めします。
+          </p>
+        </div>
+      </div>
+
       {/* エクスポート */}
       <div className="bg-white rounded-lg shadow-sm p-4">
         <h3 className="text-md font-semibold text-gray-900 mb-4">エクスポート</h3>
         <div className="space-y-3">
+          {/* CSV出力期間指定 */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">CSV出力期間</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="date"
+                value={csvPeriod.startDate}
+                onChange={(e) =>
+                  setCsvPeriod({ ...csvPeriod, startDate: e.target.value })
+                }
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-500">〜</span>
+              <input
+                type="date"
+                value={csvPeriod.endDate}
+                onChange={(e) =>
+                  setCsvPeriod({ ...csvPeriod, endDate: e.target.value })
+                }
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const now = dayjs();
+                  setCsvPeriod({
+                    startDate: now.startOf('month').format('YYYY-MM-DD'),
+                    endDate: now.endOf('month').format('YYYY-MM-DD'),
+                  });
+                }}
+                className="px-3 py-1 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                今月
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const lastMonth = dayjs().subtract(1, 'month');
+                  setCsvPeriod({
+                    startDate: lastMonth.startOf('month').format('YYYY-MM-DD'),
+                    endDate: lastMonth.endOf('month').format('YYYY-MM-DD'),
+                  });
+                }}
+                className="px-3 py-1 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                先月
+              </button>
+            </div>
+          </div>
           <button
             type="button"
             onClick={handleExportCsv}
             className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
-            CSV出力（今月）
+            CSV出力
           </button>
           <button
             type="button"

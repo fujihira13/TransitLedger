@@ -30,6 +30,10 @@ export function ListPage() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
   const [monthFilter, setMonthFilter] = useState<string>('current'); // 'current', 'last', 'all', 'custom'
+  const [customMonth, setCustomMonth] = useState<string>(() => {
+    const now = dayjs();
+    return now.format('YYYY-MM');
+  });
   const [categoryFilter, setCategoryFilter] = useState<Category | ''>('');
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>('');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -58,6 +62,13 @@ export function ListPage() {
       filtered = filtered.filter(
         (e) => e.date >= startDate && e.date <= endDate
       );
+    } else if (monthFilter === 'custom') {
+      const selectedMonth = dayjs(customMonth);
+      const startDate = selectedMonth.startOf('month').format('YYYY-MM-DD');
+      const endDate = selectedMonth.endOf('month').format('YYYY-MM-DD');
+      filtered = filtered.filter(
+        (e) => e.date >= startDate && e.date <= endDate
+      );
     }
 
     // 区分フィルタ
@@ -71,7 +82,7 @@ export function ListPage() {
     }
 
     return filtered;
-  }, [expenses, monthFilter, categoryFilter, subcategoryFilter]);
+  }, [expenses, monthFilter, customMonth, categoryFilter, subcategoryFilter]);
 
   // 支出一覧を読み込む
   const loadExpenses = () => {
@@ -185,6 +196,27 @@ export function ListPage() {
         >
           全て
         </button>
+        <button
+          type="button"
+          onClick={() => setMonthFilter('custom')}
+          className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
+            monthFilter === 'custom'
+              ? 'bg-blue-100 text-blue-800'
+              : 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          月指定
+        </button>
+        {monthFilter === 'custom' && (
+          <input
+            type="month"
+            value={customMonth}
+            onChange={(e) => {
+              setCustomMonth(e.target.value);
+            }}
+            className="px-3 py-1 rounded-full text-sm bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        )}
         <select
           value={categoryFilter}
           onChange={(e) => {
