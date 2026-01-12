@@ -21,7 +21,7 @@
   - _Requirements: 14.1, 14.2, 14.4_
 
 - [ ] 2. 型定義とドメインモデル
-- [ ] 2.1 共通型とエンティティ型の定義
+- [x] 2.1 共通型とエンティティ型の定義
   - Expense 型の定義（id, date, amount, category, subcategory, memo, satisfaction, created_at, updated_at）
   - Template 型の定義（id, name, category, subcategory, amount, memo_template, sort_order, created_at, updated_at）
   - Settings 型の定義（last_used_*, frequent_amount_*, week_start, schema_version）
@@ -30,7 +30,7 @@
   - _Requirements: 2.1, 2.2, 2.3_
 
 - [ ] 3. データ永続化層
-- [ ] 3.1 StorageAdapter の実装
+- [x] 3.1 StorageAdapter の実装
   - localStorage キー定義（te:expenses, te:templates, te:settings）
   - get/set/remove/clear メソッドの実装
   - JSON直列化/逆直列化処理
@@ -40,7 +40,7 @@
   - _Contracts: StorageAdapter Service_
 
 - [ ] 4. 支出管理サービス
-- [ ] 4.1 ExpenseService CRUD操作の実装
+- [x] 4.1 ExpenseService CRUD操作の実装
   - create メソッド（バリデーション含む）の実装
   - update メソッドの実装
   - delete メソッドの実装

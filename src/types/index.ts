@@ -211,6 +211,9 @@ export type ExportError =
   | { type: 'SCHEMA_MISMATCH'; expected: number; actual: number }
   | { type: 'STORAGE_ERROR'; message: string };
 
+// StorageKey型をエクスポート（constants.tsから再エクスポート）
+export type { StorageKey } from './constants';
+
 // ========================================
 // Result型（エラーハンドリング用）
 // ========================================
