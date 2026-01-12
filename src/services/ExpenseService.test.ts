@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ExpenseService } from './ExpenseService';
 import { StorageAdapter } from './StorageAdapter';
+import { SettingsService } from './SettingsService';
 import { ok } from '../types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from '../types/constants';
 import type { Expense, ExpenseCreateInput, ExpenseUpdateInput, ExpenseFilter } from '../types';
@@ -14,12 +15,15 @@ import type { Expense, ExpenseCreateInput, ExpenseUpdateInput, ExpenseFilter } f
 describe('ExpenseService', () => {
   let service: ExpenseService;
   let mockStorageAdapter: StorageAdapter;
+  let mockSettingsService: SettingsService;
   let mockGet: ReturnType<typeof vi.fn>;
   let mockSet: ReturnType<typeof vi.fn>;
+  let mockUpdateLastUsed: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     mockGet = vi.fn();
     mockSet = vi.fn();
+    mockUpdateLastUsed = vi.fn().mockReturnValue(ok(undefined));
 
     mockStorageAdapter = {
       get: mockGet,
@@ -28,7 +32,13 @@ describe('ExpenseService', () => {
       clear: vi.fn().mockReturnValue(ok(undefined)),
     } as unknown as StorageAdapter;
 
-    service = new ExpenseService(mockStorageAdapter);
+    mockSettingsService = {
+      updateLastUsed: mockUpdateLastUsed,
+      getSettings: vi.fn(),
+      getLastUsed: vi.fn(),
+    } as unknown as SettingsService;
+
+    service = new ExpenseService(mockStorageAdapter, mockSettingsService);
   });
 
   describe('create', () => {
@@ -58,6 +68,12 @@ describe('ExpenseService', () => {
         expect(result.value.created_at).toBeDefined();
         expect(result.value.updated_at).toBeDefined();
       }
+      // 前回入力値が更新されること
+      expect(mockUpdateLastUsed).toHaveBeenCalledWith({
+        category: 'transport',
+        subcategory: 'train',
+        memo: 'テストメモ',
+      });
     });
 
     it('日付が未入力の場合、VALIDATION_ERRORを返すこと', () => {
@@ -312,6 +328,101 @@ describe('ExpenseService', () => {
         expect(result.value).toHaveLength(1);
         expect(result.value[0].date).toBe('2026-01-12');
       }
+    });
+  });
+
+  describe('getFrequentAmounts', () => {
+    it('直近90日の支出から頻出金額を上位5件取得できること', () => {
+      const now = new Date();
+      const expenses: Expense[] = [
+        {
+          id: '1',
+          date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          amount: 1000,
+          category: 'transport',
+          subcategory: 'train',
+          memo: null,
+          satisfaction: null,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          amount: 1000,
+          category: 'transport',
+          subcategory: 'train',
+          memo: null,
+          satisfaction: null,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        },
+        {
+          id: '3',
+          date: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          amount: 2000,
+          category: 'social',
+          subcategory: 'meal',
+          memo: null,
+          satisfaction: null,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        },
+        {
+          id: '4',
+          date: new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          amount: 5000,
+          category: 'transport',
+          subcategory: 'train',
+          memo: null,
+          satisfaction: null,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        },
+      ];
+
+      mockGet.mockReturnValue(ok(expenses));
+
+      const result = service.getFrequentAmounts();
+
+      expect(result).toHaveLength(2); // 1000円が2回、2000円が1回（90日以内）
+      expect(result[0].amount).toBe(1000);
+      expect(result[0].count).toBe(2);
+      expect(result[1].amount).toBe(2000);
+      expect(result[1].count).toBe(1);
+    });
+
+    it('支出が存在しない場合は空配列を返すこと', () => {
+      mockGet.mockReturnValue(ok([]));
+
+      const result = service.getFrequentAmounts();
+
+      expect(result).toEqual([]);
+    });
+
+    it('上位5件のみを返すこと', () => {
+      const now = new Date();
+      const expenses: Expense[] = [];
+      // 6種類の金額を作成（各1回ずつ）
+      for (let i = 0; i < 6; i++) {
+        expenses.push({
+          id: `id-${i}`,
+          date: new Date(now.getTime() - (i + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          amount: (i + 1) * 1000,
+          category: 'transport',
+          subcategory: 'train',
+          memo: null,
+          satisfaction: null,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        });
+      }
+
+      mockGet.mockReturnValue(ok(expenses));
+
+      const result = service.getFrequentAmounts();
+
+      expect(result).toHaveLength(5); // 上位5件のみ
     });
   });
 });

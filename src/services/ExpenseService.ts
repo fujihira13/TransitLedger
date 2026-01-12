@@ -17,12 +17,16 @@ import type {
 } from '../types';
 import { STORAGE_KEYS, MIN_AMOUNT, MAX_MEMO_LENGTH, SATISFACTION_RANGE } from '../types/constants';
 import { StorageAdapter } from './StorageAdapter';
+import { SettingsService } from './SettingsService';
 
 /**
  * 支出管理サービス
  */
 export class ExpenseService {
-  constructor(private storageAdapter: StorageAdapter) {}
+  constructor(
+    private storageAdapter: StorageAdapter,
+    private settingsService?: SettingsService
+  ) {}
 
   /**
    * 支出を作成する
@@ -68,6 +72,15 @@ export class ExpenseService {
       return err({
         type: 'STORAGE_ERROR',
         message: `Failed to save expense: ${saveResult.error.message}`,
+      });
+    }
+
+    // 前回入力値を更新（SettingsServiceが利用可能な場合）
+    if (this.settingsService) {
+      this.settingsService.updateLastUsed({
+        category: input.category,
+        subcategory: input.subcategory,
+        memo: input.memo || '',
       });
     }
 
