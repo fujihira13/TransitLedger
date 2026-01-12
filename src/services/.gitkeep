@@ -1,0 +1,6 @@
+// このディレクトリにはアプリケーションのサービス層（ビジネスロジック）を配置します
+// - StorageAdapter: localStorage への抽象化
+// - ExpenseService: 支出CRUD操作
+// - TemplateService: テンプレートCRUD操作
+// - AggregationService: 集計計算
+// - ExportService: エクスポート/インポート

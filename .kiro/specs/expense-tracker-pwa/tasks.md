@@ -3,7 +3,7 @@
 ## タスク一覧
 
 - [ ] 1. プロジェクト初期設定
-- [ ] 1.1 Vite + React + TypeScript プロジェクトの作成
+- [x] 1.1 Vite + React + TypeScript プロジェクトの作成
   - Vite 5.x でReact 18 + TypeScript 5.x プロジェクトを作成
   - ESLint/Prettier の設定
   - Tailwind CSS 3.x のインストールと設定

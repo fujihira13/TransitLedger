@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PWA用のベーススタイル */
+@layer base {
+  html {
+    /* タッチデバイスでのスクロールを滑らかに */
+    -webkit-overflow-scrolling: touch;
+    /* テキスト選択の防止（アプリライク）*/
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply min-h-screen;
+    /* セーフエリア対応 */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* 入力フィールドは選択可能に */
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* タップハイライトの最適化 */
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* モバイルファーストのボタンスタイル */
+  .btn-primary {
+    @apply bg-blue-600 text-white px-4 py-3 rounded-lg font-medium;
+    @apply active:bg-blue-700 transition-colors;
+    @apply min-h-[44px]; /* タップ領域の確保 */
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white px-4 py-3 rounded-lg font-medium;
+    @apply active:bg-red-700 transition-colors;
+    @apply min-h-[44px];
+  }
+
+  /* 入力フィールドスタイル */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-gray-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply min-h-[44px];
+  }
+
+  /* カードスタイル */
+  .card {
+    @apply bg-white rounded-xl shadow-sm p-4;
+  }
+}
