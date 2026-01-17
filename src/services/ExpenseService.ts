@@ -23,10 +23,13 @@ import { SettingsService } from './SettingsService';
  * 支出管理サービス
  */
 export class ExpenseService {
-  constructor(
-    private storageAdapter: StorageAdapter,
-    private settingsService?: SettingsService
-  ) {}
+  private storageAdapter: StorageAdapter;
+  private settingsService?: SettingsService;
+
+  constructor(storageAdapter: StorageAdapter, settingsService?: SettingsService) {
+    this.storageAdapter = storageAdapter;
+    this.settingsService = settingsService;
+  }
 
   /**
    * 支出を作成する

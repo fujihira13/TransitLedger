@@ -9,7 +9,7 @@ import { SettingsService } from './SettingsService';
 import { StorageAdapter } from './StorageAdapter';
 import { ok } from '../types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from '../types/constants';
-import type { Settings, Category } from '../types';
+import type { Settings } from '../types';
 
 describe('SettingsService', () => {
   let service: SettingsService;

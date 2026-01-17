@@ -11,13 +11,7 @@ import { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
 import { StorageAdapter } from '../services/StorageAdapter';
 import { AggregationService } from '../services/AggregationService';
-import type {
-  CategorySummary,
-  SubcategorySummary,
-  SatisfactionStats,
-  Insights,
-  AggregationPeriod,
-} from '../types';
+import type { AggregationPeriod } from '../types';
 
 // サービスインスタンス
 const storageAdapter = new StorageAdapter();

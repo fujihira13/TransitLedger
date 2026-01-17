@@ -23,7 +23,11 @@ export interface LastUsedValues {
  * 設定管理サービス
  */
 export class SettingsService {
-  constructor(private storageAdapter: StorageAdapter) {}
+  private storageAdapter: StorageAdapter;
+
+  constructor(storageAdapter: StorageAdapter) {
+    this.storageAdapter = storageAdapter;
+  }
 
   /**
    * 設定を取得する（存在しない場合はデフォルト設定を返す）

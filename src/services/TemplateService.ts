@@ -19,7 +19,11 @@ import { StorageAdapter } from './StorageAdapter';
  * テンプレート管理サービス
  */
 export class TemplateService {
-  constructor(private storageAdapter: StorageAdapter) {}
+  private storageAdapter: StorageAdapter;
+
+  constructor(storageAdapter: StorageAdapter) {
+    this.storageAdapter = storageAdapter;
+  }
 
   /**
    * テンプレートを作成する

@@ -10,7 +10,7 @@ import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { StorageAdapter } from '../services/StorageAdapter';
 import { TemplateService } from '../services/TemplateService';
 import { ExportService } from '../services/ExportService';
-import type { Template, TemplateCreateInput, BackupData } from '../types';
+import type { Template, TemplateCreateInput } from '../types';
 import { SUBCATEGORIES_BY_CATEGORY } from '../types/constants';
 
 // サービスインスタンス
@@ -110,7 +110,11 @@ export function SettingsPage() {
         // ページをリロードしてデータを反映
         window.location.reload();
       } else {
-        setError(`復元に失敗しました: ${importResult.error.message}`);
+        const errorMessage =
+          importResult.error.type === 'STORAGE_ERROR'
+            ? importResult.error.message
+            : '予期しないエラー';
+        setError(`復元に失敗しました: ${errorMessage}`);
         setShowRestoreDialog(false);
         setRestoreFile(null);
       }
@@ -130,7 +134,11 @@ export function SettingsPage() {
       // ページをリロード
       window.location.reload();
     } else {
-      setError(`削除に失敗しました: ${result.error.message}`);
+      const errorMessage =
+        result.error.type === 'STORAGE_ERROR'
+          ? result.error.message
+          : '予期しないエラー';
+      setError(`削除に失敗しました: ${errorMessage}`);
       setShowDeleteAllDialog(false);
     }
   };
@@ -169,7 +177,11 @@ export function SettingsPage() {
       setDeletingTemplate(null);
       loadTemplates();
     } else {
-      setError(`削除に失敗しました: ${result.error.message}`);
+      const errorMessage =
+        result.error.type === 'NOT_FOUND'
+          ? '対象が見つかりませんでした'
+          : result.error.message;
+      setError(`削除に失敗しました: ${errorMessage}`);
       setDeletingTemplate(null);
     }
   };
@@ -190,7 +202,11 @@ export function SettingsPage() {
     if (result.ok) {
       loadTemplates();
     } else {
-      setError(`並び替えに失敗しました: ${result.error.message}`);
+      const errorMessage =
+        result.error.type === 'NOT_FOUND'
+          ? '対象が見つかりませんでした'
+          : result.error.message;
+      setError(`並び替えに失敗しました: ${errorMessage}`);
     }
   };
 
@@ -210,7 +226,11 @@ export function SettingsPage() {
     if (result.ok) {
       loadTemplates();
     } else {
-      setError(`並び替えに失敗しました: ${result.error.message}`);
+      const errorMessage =
+        result.error.type === 'NOT_FOUND'
+          ? '対象が見つかりませんでした'
+          : result.error.message;
+      setError(`並び替えに失敗しました: ${errorMessage}`);
     }
   };
 

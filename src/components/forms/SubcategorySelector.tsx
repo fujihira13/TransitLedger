@@ -37,10 +37,12 @@ export function SubcategorySelector({
   required = false,
 }: SubcategorySelectorProps) {
   // 区分に応じたサブ区分を取得
-  const subcategories =
+  const subcategoryEntries: Array<[string, string]> =
     category && category in SUBCATEGORIES_BY_CATEGORY
-      ? SUBCATEGORIES_BY_CATEGORY[category]
-      : {};
+      ? (Object.entries(SUBCATEGORIES_BY_CATEGORY[category]) as Array<
+          [string, string]
+        >)
+      : [];
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(e.target.value);
@@ -67,7 +69,7 @@ export function SubcategorySelector({
         required={required}
       >
         <option value="">選択してください</option>
-        {Object.entries(subcategories).map(([key, label]) => (
+        {subcategoryEntries.map(([key, label]) => (
           <option key={key} value={key}>
             {label}
           </option>

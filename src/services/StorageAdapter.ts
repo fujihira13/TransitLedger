@@ -7,7 +7,6 @@
 
 import { ok, err } from '../types';
 import type { StorageError, StorageKey } from '../types';
-import { STORAGE_KEYS } from '../types/constants';
 
 /**
  * localStorageへのアクセスを抽象化するアダプター

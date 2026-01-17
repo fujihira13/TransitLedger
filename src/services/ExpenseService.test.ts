@@ -9,7 +9,7 @@ import { ExpenseService } from './ExpenseService';
 import { StorageAdapter } from './StorageAdapter';
 import { SettingsService } from './SettingsService';
 import { ok } from '../types';
-import { STORAGE_KEYS, DEFAULT_SETTINGS } from '../types/constants';
+import { STORAGE_KEYS } from '../types/constants';
 import type { Expense, ExpenseCreateInput, ExpenseUpdateInput, ExpenseFilter } from '../types';
 
 describe('ExpenseService', () => {
@@ -83,7 +83,9 @@ describe('ExpenseService', () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.error.type).toBe('VALIDATION_ERROR');
+        if (result.error.type !== 'VALIDATION_ERROR') {
+          throw new Error('Expected VALIDATION_ERROR');
+        }
         expect(result.error.field).toBe('date');
       }
     });
@@ -95,7 +97,9 @@ describe('ExpenseService', () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.error.type).toBe('VALIDATION_ERROR');
+        if (result.error.type !== 'VALIDATION_ERROR') {
+          throw new Error('Expected VALIDATION_ERROR');
+        }
         expect(result.error.field).toBe('amount');
       }
     });
@@ -107,7 +111,9 @@ describe('ExpenseService', () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.error.type).toBe('VALIDATION_ERROR');
+        if (result.error.type !== 'VALIDATION_ERROR') {
+          throw new Error('Expected VALIDATION_ERROR');
+        }
         expect(result.error.field).toBe('satisfaction');
       }
     });
@@ -119,7 +125,9 @@ describe('ExpenseService', () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.error.type).toBe('VALIDATION_ERROR');
+        if (result.error.type !== 'VALIDATION_ERROR') {
+          throw new Error('Expected VALIDATION_ERROR');
+        }
         expect(result.error.field).toBe('memo');
       }
     });

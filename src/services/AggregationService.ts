@@ -22,7 +22,11 @@ import { StorageAdapter } from './StorageAdapter';
  * 集計・分析サービス
  */
 export class AggregationService {
-  constructor(private storageAdapter: StorageAdapter) {}
+  private storageAdapter: StorageAdapter;
+
+  constructor(storageAdapter: StorageAdapter) {
+    this.storageAdapter = storageAdapter;
+  }
 
   /**
    * カテゴリ別集計を取得する

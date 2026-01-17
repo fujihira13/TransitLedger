@@ -6,9 +6,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { StorageAdapter } from './StorageAdapter';
-import { ok, err } from '../types';
 import { STORAGE_KEYS } from '../types/constants';
-import type { StorageError } from '../types';
 
 describe('StorageAdapter', () => {
   let adapter: StorageAdapter;

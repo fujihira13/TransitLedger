@@ -15,8 +15,6 @@ export function useSWUpdate() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      let registration: ServiceWorkerRegistration | null = null;
-
       // Service Workerの更新を検出
       const handleControllerChange = () => {
         // コントローラーが変更された = 更新が適用された
@@ -29,34 +27,36 @@ export function useSWUpdate() {
       // Service Workerの更新をチェック
       const checkForUpdates = async () => {
         try {
-          registration = await navigator.serviceWorker.getRegistration();
-          if (registration) {
-            // 更新を検出
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration!.installing || registration!.waiting;
-              if (newWorker) {
-                const handleStateChange = () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // 新しいService Workerがインストールされた（待機中）
-                    setUpdateAvailable(true);
-                  } else if (newWorker.state === 'activated') {
-                    // 新しいService Workerが有効化された
-                    setUpdateAvailable(false);
-                  }
-                };
-                
-                newWorker.addEventListener('statechange', handleStateChange);
-                
-                // 既に待機中の場合は即座に通知
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  setUpdateAvailable(true);
-                }
-              }
-            });
-
-            // 定期的に更新をチェック
-            await registration.update();
+          const swRegistration = await navigator.serviceWorker.getRegistration();
+          if (!swRegistration) {
+            return;
           }
+
+          // 更新を検出
+          swRegistration.addEventListener('updatefound', () => {
+            const newWorker = swRegistration.installing || swRegistration.waiting;
+            if (newWorker) {
+              const handleStateChange = () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // 新しいService Workerがインストールされた（待機中）
+                  setUpdateAvailable(true);
+                } else if (newWorker.state === 'activated') {
+                  // 新しいService Workerが有効化された
+                  setUpdateAvailable(false);
+                }
+              };
+
+              newWorker.addEventListener('statechange', handleStateChange);
+
+              // 既に待機中の場合は即座に通知
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setUpdateAvailable(true);
+              }
+            }
+          });
+
+          // 定期的に更新をチェック
+          await swRegistration.update();
         } catch (error) {
           console.error('Service Worker更新チェックに失敗しました:', error);
         }

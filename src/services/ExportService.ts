@@ -22,7 +22,11 @@ import { StorageAdapter } from './StorageAdapter';
  * エクスポート・バックアップサービス
  */
 export class ExportService {
-  constructor(private storageAdapter: StorageAdapter) {}
+  private storageAdapter: StorageAdapter;
+
+  constructor(storageAdapter: StorageAdapter) {
+    this.storageAdapter = storageAdapter;
+  }
 
   /**
    * CSV形式でデータをエクスポートする
@@ -149,7 +153,15 @@ export class ExportService {
       });
     }
 
-    return ok(backup as BackupData);
+    const validatedBackup: BackupData = {
+      schemaVersion: backup.schemaVersion,
+      exportedAt: backup.exportedAt,
+      expenses: backup.expenses as Expense[],
+      templates: backup.templates as Template[],
+      settings: backup.settings as Settings,
+    };
+
+    return ok(validatedBackup);
   }
 
   /**

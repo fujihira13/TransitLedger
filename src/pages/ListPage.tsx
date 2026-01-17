@@ -16,7 +16,7 @@ import { ConfirmDialog } from '../components/dialogs/ConfirmDialog';
 import { StorageAdapter } from '../services/StorageAdapter';
 import { ExpenseService } from '../services/ExpenseService';
 import { SettingsService } from '../services/SettingsService';
-import type { Expense, ExpenseFilter, Category } from '../types';
+import type { Expense, ExpenseCreateInput, Category } from '../types';
 
 // サービスインスタンス
 const storageAdapter = new StorageAdapter();
@@ -118,7 +118,7 @@ export function ListPage() {
   }, [editingExpense]);
 
   // 編集を保存
-  const handleUpdate = async (input: Parameters<typeof expenseService.update>[0]) => {
+  const handleUpdate = async (input: ExpenseCreateInput) => {
     if (!editingExpense) return;
 
     const result = expenseService.update({
@@ -130,7 +130,13 @@ export function ListPage() {
       setEditingExpense(null);
       loadExpenses();
     } else {
-      alert(`更新に失敗しました: ${result.error.type === 'VALIDATION_ERROR' ? result.error.message : '予期しないエラー'}`);
+      const errorMessage =
+        result.error.type === 'VALIDATION_ERROR'
+          ? result.error.message
+          : result.error.type === 'STORAGE_ERROR'
+            ? result.error.message
+            : '対象が見つかりませんでした';
+      alert(`更新に失敗しました: ${errorMessage}`);
     }
   };
 
@@ -148,7 +154,11 @@ export function ListPage() {
       setDeletingExpense(null);
       loadExpenses();
     } else {
-      alert(`削除に失敗しました: ${result.error.message}`);
+      const errorMessage =
+        result.error.type === 'STORAGE_ERROR'
+          ? result.error.message
+          : '対象が見つかりませんでした';
+      alert(`削除に失敗しました: ${errorMessage}`);
     }
   };
 

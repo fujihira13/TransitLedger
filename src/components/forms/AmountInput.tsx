@@ -5,7 +5,7 @@
  * 数値キーボードに対応しています。
  */
 
-import type { ChangeEvent, FocusEvent } from 'react';
+import type { ChangeEvent } from 'react';
 
 interface AmountInputProps {
   /** 現在の値 */
@@ -51,10 +51,8 @@ export function AmountInput({
     }
   };
 
-  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
-    if (onFocus) {
-      onFocus();
-    }
+  const handleFocus = () => {
+    onFocus?.();
   };
 
   return (
