@@ -1,73 +1,97 @@
-# React + TypeScript + Vite
+# Expense Tracker PWA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 概要
 
-Currently, two official plugins are available:
+目的: 交通費・交際費を最短入力で記録し、月次/期間で把握できるようにする。
+解決する課題: 入力が面倒で続かない、手元で素早く集計したい。
+できること:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 最短入力（テンプレ/頻出金額/前回値の引き継ぎ）
+- 一覧の編集/削除とフィルタ（今月/先月/月指定/区分）
+- 月次・期間集計と満足度/軽量分析
+- CSV出力
+- PWA対応（ホーム画面追加、オフライン動作）
+  想定ユーザー: 個人で交通費・交際費をスマホ中心に管理したい人。
 
-## React Compiler
+## 技術スタック
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Frontend: React 19 / TypeScript 5 / Vite 7, React Router, Tailwind CSS
+- Backend: N/A（クライアントのみ）
+- DB: localStorage
+- Auth: なし
+- Infra: Firebase Hosting
+- Others: Vite PWA Plugin, Vitest, ESLint, Prettier, Day.js
 
-## Expanding the ESLint configuration
+## アーキテクチャ概要
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+クライアントのみで動作するローカルファーストPWA。UIはReact、ビジネスロジックはService層で集約し、端末内のlocalStorageに保存する。
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```mermaid
+graph TD
+  User[ユーザー] --> UI[React UI / ルーティング]
+  UI --> Services[Service層]
+  Services --> Storage[localStorage]
+  UI --> SW[Service Worker]
+  SW --> Cache[Cache Storage]
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## セットアップ
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Node.js（ES Modules対応）
+- npm（package-lock.jsonに準拠）
+- Git
+- Firebase CLI（デプロイ時のみ）
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## クイックスタート
+
+
+1. 依存関係をインストールする
+
+```bash
+npm install
 ```
+
+2. 開発サーバーを起動する
+
+```bash
+npm run dev
+```
+
+3. ブラウザで http://localhost:5173 を開く
+
+## ローカル開発
+
+起動:
+
+```bash
+npm run dev
+```
+
+よくあるつまずき:
+
+- 5173番ポートが使用中の場合、Viteが別ポートに切り替える。
+- PWAのService Workerで更新が反映されない場合は、DevToolsのApplication > Service Workersで登録解除する。
+- localStorageの削除やブラウザデータ消去でデータが失われるため、定期的にJSONバックアップを行う。
+- シークレットモードやストレージ制限により保存できない場合がある。
+
+## デプロイ
+
+Firebase Hostingを利用。
+
+1. 本番ビルドを生成する
+
+```bash
+npm run build
+```
+
+2. Firebaseにデプロイする
+
+```bash
+firebase deploy
+```
+
+補足:
+
+- `firebase.json` は `dist` を公開ディレクトリとして使用。
+- Firebaseプロジェクトへのデプロイ権限が必要。
+- マイグレーション運用は不要。
