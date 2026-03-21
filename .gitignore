@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .firebase/
 dev-dist/
+
+.claude/
+.codex/
+skills-lock.json
